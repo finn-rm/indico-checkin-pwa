@@ -10,9 +10,18 @@ interface LoaderData {
   regform: Regform;
 }
 
+function formatTime(date: Date) {
+  return date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+}
+
 export default function CheckinConfirmation() {
   const {participant} = useLoaderData() as LoaderData;
   const navigate = useNavigate();
+  const currentTime = formatTime(new Date());
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -26,7 +35,7 @@ export default function CheckinConfirmation() {
     <div className="flex h-screen flex-col items-center justify-center">
       <CheckCircleIcon className="h-24 w-24 text-green-500" />
       <Typography variant="h1" className="mt-4 text-center">
-        Checked in
+        Checked in at {currentTime}
       </Typography>
       <Typography variant="h2" className="mt-2 text-center">
         {participant.fullName}

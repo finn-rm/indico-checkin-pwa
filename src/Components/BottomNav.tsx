@@ -67,7 +67,7 @@ export default function BottomNav() {
                 : 'text-gray-500 dark:text-gray-400'
             }`}
           >
-            Self Scan
+            Kiosk
           </span>
         </Link>
         <Link

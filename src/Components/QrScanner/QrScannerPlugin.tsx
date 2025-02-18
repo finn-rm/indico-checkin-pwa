@@ -34,17 +34,28 @@ export async function scanFile(file: File): Promise<string> {
 
 interface QrProps {
   fps?: number; // Expected frame rate of qr code scanning. example { fps: 2 } means the scanning would be done every 500 ms.
-  qrbox?: number;
   disableFlip?: boolean;
+  formatsToSupport?: Html5QrcodeSupportedFormats[];
   qrCodeSuccessCallback: (decodedText: string, decodedResult: unknown) => void;
   qrCodeErrorCallback?: (errorMessage: string, error: unknown) => void;
-  formatsToSupport?: Html5QrcodeSupportedFormats[];
   onPermRefused: () => void;
+}
+
+function calculateQrBoxSize() {
+  const screenWidth = window.innerWidth;
+  const screenHeight = window.innerHeight;
+  const minDimension = Math.min(screenWidth, screenHeight);
+
+  // On mobile, use 70% of the smaller screen dimension
+  // On desktop (>768px), cap at 400px
+  const size = Math.min(minDimension * 0.7, 400);
+
+  // Ensure the size is an even number (required by the library)
+  return Math.floor(size - (size % 2));
 }
 
 export default function QrScannerPlugin({
   fps = 10,
-  qrbox = 250,
   disableFlip = false,
   formatsToSupport = [Html5QrcodeSupportedFormats.QR_CODE],
   qrCodeSuccessCallback,
@@ -52,9 +63,20 @@ export default function QrScannerPlugin({
   onPermRefused,
 }: QrProps) {
   const aspectRatio = calcAspectRatio();
-  const html5CustomScanner: MutableRefObject<Html5Qrcode | null> = useRef(null);
+  const html5CustomScanner = useRef<Html5Qrcode | null>(null);
   const [canUseCamera, setCanUseCamera] = useState(true);
   const logError = useLogError();
+  const qrRegionRef = useRef<HTMLDivElement>(null);
+  const [qrboxSize, setQrboxSize] = useState(calculateQrBoxSize());
+
+  useEffect(() => {
+    const handleResize = () => {
+      setQrboxSize(calculateQrBoxSize());
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Turn off the torch (if it is on) when navigating away from the scan page
   const switchOffTorch = useCallback(
@@ -75,6 +97,13 @@ export default function QrScannerPlugin({
 
   useEffect(() => {
     const showQRCode = async () => {
+      // Add a small delay to ensure DOM is ready
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (!qrRegionRef.current) {
+        return;
+      }
+
       const hasCamPerm: boolean = await checkCameraPermissions();
       if (!hasCamPerm) {
         onPermRefused();
@@ -82,42 +111,50 @@ export default function QrScannerPlugin({
         return;
       }
 
-      const cameraState = html5CustomScanner.current?.getState() || 0;
+      try {
+        const cameraState = html5CustomScanner.current?.getState() || 0;
 
-      if (cameraState <= Html5QrcodeScannerState.UNKNOWN) {
-        // when component mounts
-        html5CustomScanner.current = new Html5Qrcode(qrcodeRegionId, {
-          formatsToSupport,
-          verbose: false,
-        });
+        if (cameraState <= Html5QrcodeScannerState.UNKNOWN) {
+          html5CustomScanner.current = new Html5Qrcode(qrcodeRegionId);
 
-        await html5CustomScanner.current.start(
-          {facingMode: 'environment'},
-          {fps, qrbox, aspectRatio, disableFlip},
-          qrCodeSuccessCallback,
-          qrCodeErrorCallback
-        );
+          await html5CustomScanner.current.start(
+            {facingMode: 'environment'},
+            {fps, qrbox: qrboxSize, aspectRatio, disableFlip},
+            qrCodeSuccessCallback,
+            qrCodeErrorCallback
+          );
+        }
+      } catch (err) {
+        console.error('QR Scanner initialization error:', err);
+        logError(`QR Scanner initialization error: ${err}`);
       }
     };
 
-    showQRCode().catch(err => console.error(err));
+    showQRCode().catch(err => {
+      console.error('QR Scanner setup error:', err);
+      logError(`QR Scanner setup error: ${err}`);
+    });
 
     return () => {
       const stopQrScanner = async () => {
-        await switchOffTorch(html5CustomScanner);
-        if (html5CustomScanner.current?.isScanning) {
-          await html5CustomScanner.current.stop();
+        try {
+          await switchOffTorch(html5CustomScanner);
+          if (html5CustomScanner.current?.isScanning) {
+            await html5CustomScanner.current.stop();
+          }
+          html5CustomScanner.current?.clear();
+          html5CustomScanner.current = null;
+        } catch (err) {
+          console.error('Error stopping QR scanner:', err);
+          logError(`Error stopping QR scanner: ${err}`);
         }
-        html5CustomScanner.current?.clear();
-        // Destroy the object
-        html5CustomScanner.current = null;
       };
 
       stopQrScanner();
     };
   }, [
     fps,
-    qrbox,
+    qrboxSize,
     aspectRatio,
     disableFlip,
     formatsToSupport,
@@ -125,14 +162,15 @@ export default function QrScannerPlugin({
     qrCodeErrorCallback,
     onPermRefused,
     switchOffTorch,
+    logError,
   ]);
 
   return (
     <>
       <div className={classes.container}>
         <div className={classes.wrapper}>
-          <ShadedRegion size={qrbox}></ShadedRegion>
-          <div id={qrcodeRegionId} />
+          <ShadedRegion size={qrboxSize}></ShadedRegion>
+          <div ref={qrRegionRef} id={qrcodeRegionId} />
         </div>
         <TorchButton html5CustomScanner={html5CustomScanner} canUseCamera={canUseCamera} />
       </div>

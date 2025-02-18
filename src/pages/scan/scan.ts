@@ -172,6 +172,9 @@ export async function handleParticipant(
           } else {
             // Reset loading state on error
             await db.participants.update(participant.id, {checkedInLoading: 0});
+            // Add error feedback
+            playSound('error');
+            playVibration.error();
             handleError(
               response,
               'Something went wrong when updating check-in status',
@@ -181,6 +184,9 @@ export async function handleParticipant(
         } catch (error) {
           // Reset loading state on error
           await db.participants.update(participant.id, {checkedInLoading: 0});
+          // Add error feedback
+          playSound('error');
+          playVibration.error();
           handleError(error, 'Error during check-in', autoCheckin);
         }
       }
