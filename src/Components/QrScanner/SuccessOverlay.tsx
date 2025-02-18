@@ -1,16 +1,8 @@
 import {useEffect} from 'react';
-import {useNavigate, useLoaderData} from 'react-router-dom';
-import {CheckCircleIcon} from '@heroicons/react/20/solid';
+import {CheckCircleIcon} from '@heroicons/react/24/outline';
 import {Typography} from '../../Components/Tailwind';
-import {Participant, Event, Regform} from '../../db/db';
 
-interface LoaderData {
-  participant: Participant;
-  event: Event;
-  regform: Regform;
-}
-
-function formatTime(date: Date) {
+export function formatTime(date: Date) {
   return date.toLocaleTimeString(undefined, {
     hour: 'numeric',
     minute: '2-digit',
@@ -18,21 +10,23 @@ function formatTime(date: Date) {
   });
 }
 
-export default function CheckinConfirmation() {
-  const {participant} = useLoaderData() as LoaderData;
-  const navigate = useNavigate();
+interface SuccessOverlayProps {
+  participant: {
+    fullName: string;
+  };
+  onAnimationComplete: () => void;
+}
+
+export default function SuccessOverlay({participant, onAnimationComplete}: SuccessOverlayProps) {
   const currentTime = formatTime(new Date());
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      navigate('/selfscan', {replace: true});
-    }, 2000);
-
+    const timer = setTimeout(onAnimationComplete, 2000);
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [onAnimationComplete]);
 
   return (
-    <div className="flex h-screen flex-col items-center justify-center">
+    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white dark:bg-gray-900">
       <CheckCircleIcon className="h-24 w-24 text-green-500" />
       <Typography variant="h1" className="mt-4 text-center">
         Checked in at {currentTime}

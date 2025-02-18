@@ -32,7 +32,7 @@ export default function TopNav({
     );
   } else {
     return (
-      <div className="mb-4 flex min-h-10 items-center justify-between p-2">
+      <div className="flex min-h-10 items-center justify-between p-2">
         <button
           type="button"
           className="flex max-w-[60%] cursor-pointer items-center rounded-full transition-all

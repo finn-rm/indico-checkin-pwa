@@ -1,10 +1,11 @@
-import {useState} from 'react';
+import {useState, useCallback} from 'react';
 import {useNavigate} from 'react-router-dom';
 import {VideoCameraSlashIcon} from '@heroicons/react/20/solid';
 import QrScannerPlugin, {
   FileUploadScanner,
   scanFile,
 } from '../../Components/QrScanner/QrScannerPlugin';
+import SuccessOverlay from '../../Components/QrScanner/SuccessOverlay';
 import {Typography} from '../../Components/Tailwind';
 import LoadingBanner from '../../Components/Tailwind/LoadingBanner';
 import TopNav from '../../Components/TopNav';
@@ -22,12 +23,18 @@ interface ScanProps {
 
 export default function Scan({autoCheckin = false}: ScanProps) {
   const [hasPermission, setHasPermission] = useState(true);
-  const [processing, setProcessing] = useState(false); // Determines if a QR Code is being processed
+  const [processing, setProcessing] = useState(false);
+  const [successData, setSuccessData] = useState<{participant: Participant} | null>(null);
   const navigate = useNavigate();
   const errorModal = useErrorModal();
   const handleError = useHandleError();
   const offline = useIsOffline();
   const isDesktop = useMediaQuery('(min-width: 1280px)');
+
+  const handleSuccessComplete = useCallback(() => {
+    setSuccessData(null);
+    setProcessing(false);
+  }, []);
 
   async function processCode(decodedText: string) {
     if (processing) {
@@ -66,7 +73,16 @@ export default function Scan({autoCheckin = false}: ScanProps) {
     const parsedData = parseQRCodeParticipantData(scannedData);
     if (parsedData) {
       try {
-        await handleParticipant(parsedData, errorModal, handleError, navigate, autoCheckin);
+        await handleParticipant(
+          parsedData,
+          errorModal,
+          handleError,
+          navigate,
+          autoCheckin,
+          participant => {
+            setSuccessData({participant});
+          }
+        );
       } catch (e) {
         handleError(e, 'Error processing QR code', autoCheckin);
       }
@@ -112,29 +128,37 @@ export default function Scan({autoCheckin = false}: ScanProps) {
   const fileUploadVisible = !processing && (isDesktop || import.meta.env.DEV);
 
   return (
-    <div>
+    <div className="flex min-h-screen flex-col">
       <TopNav backBtnText={autoCheckin ? 'Self Check-in' : 'Scan'} backNavigateTo={-1} />
-      {!processing && (
-        <div className="mt-[-1rem]">
-          <QrScannerPlugin qrCodeSuccessCallback={onScanResult} onPermRefused={onPermRefused} />
+      <div className="flex flex-1 flex-col">
+        <div className="relative flex-1">
+          {!processing && (
+            <QrScannerPlugin qrCodeSuccessCallback={onScanResult} onPermRefused={onPermRefused} />
+          )}
+          {processing && <LoadingBanner text="Loading.." />}
+          {successData && (
+            <SuccessOverlay
+              participant={successData.participant}
+              onAnimationComplete={handleSuccessComplete}
+            />
+          )}
         </div>
-      )}
-      {processing && <LoadingBanner text="Loading.." />}
-      {!processing && !hasPermission && (
-        <div className="mx-4 mt-2 rounded-xl bg-gray-100 dark:bg-gray-800">
-          <div className="flex flex-col items-center justify-center gap-2 px-6 pb-12 pt-10">
-            <VideoCameraSlashIcon className="w-20 text-gray-500" />
-            <Typography variant="h3" className="text-center">
-              Please give permission to access the camera and refresh the page
-            </Typography>
+        {!processing && !hasPermission && (
+          <div className="mx-4 mt-2 rounded-xl bg-gray-100 dark:bg-gray-800">
+            <div className="flex flex-col items-center justify-center gap-2 px-6 pb-12 pt-10">
+              <VideoCameraSlashIcon className="w-20 text-gray-500" />
+              <Typography variant="h3" className="text-center">
+                Please give permission to access the camera and refresh the page
+              </Typography>
+            </div>
           </div>
-        </div>
-      )}
-      {fileUploadVisible && (
-        <div className="mt-6">
-          <FileUploadScanner onFileUpload={onFileUpload} />
-        </div>
-      )}
+        )}
+        {fileUploadVisible && (
+          <div className="my-6">
+            <FileUploadScanner onFileUpload={onFileUpload} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
