@@ -87,7 +87,8 @@ export async function handleParticipant(
   errorModal: ErrorModalFunction,
   handleError: HandleError,
   navigate: NavigateFunction,
-  autoCheckin: boolean
+  autoCheckin: boolean,
+  onSuccess?: (participant: Participant) => void
 ) {
   const server = await db.servers.get({baseUrl: data.serverUrl});
   if (!server) {
@@ -165,10 +166,10 @@ export async function handleParticipant(
             playSound('success');
             playVibration.success();
 
-            // Navigate to confirmation
-            navigate(`/checkin-confirmation/${event.id}/${regform.id}/${participantId}`, {
-              replace: true,
-            });
+            // Instead of navigating, call the success callback
+            if (onSuccess) {
+              onSuccess(participant);
+            }
           } else {
             // Reset loading state on error
             await db.participants.update(participant.id, {checkedInLoading: 0});
