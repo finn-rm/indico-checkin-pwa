@@ -129,11 +129,13 @@ export default function QrScannerPlugin({
 
   return (
     <>
-      <div className={classes.wrapper}>
-        <ShadedRegion size={qrbox}></ShadedRegion>
-        <div id={qrcodeRegionId} />
+      <div className={classes.container}>
+        <div className={classes.wrapper}>
+          <ShadedRegion size={qrbox}></ShadedRegion>
+          <div id={qrcodeRegionId} />
+        </div>
+        <TorchButton html5CustomScanner={html5CustomScanner} canUseCamera={canUseCamera} />
       </div>
-      <TorchButton html5CustomScanner={html5CustomScanner} canUseCamera={canUseCamera} />
     </>
   );
 }

@@ -112,29 +112,31 @@ export default function Scan({autoCheckin = false}: ScanProps) {
   const fileUploadVisible = !processing && (isDesktop || import.meta.env.DEV);
 
   return (
-    <div>
+    <div className="flex min-h-screen flex-col">
       <TopNav backBtnText={autoCheckin ? 'Self Check-in' : 'Scan'} backNavigateTo={-1} />
-      {!processing && (
-        <div className="mt-[-1rem]">
-          <QrScannerPlugin qrCodeSuccessCallback={onScanResult} onPermRefused={onPermRefused} />
-        </div>
-      )}
-      {processing && <LoadingBanner text="Loading.." />}
-      {!processing && !hasPermission && (
-        <div className="mx-4 mt-2 rounded-xl bg-gray-100 dark:bg-gray-800">
-          <div className="flex flex-col items-center justify-center gap-2 px-6 pb-12 pt-10">
-            <VideoCameraSlashIcon className="w-20 text-gray-500" />
-            <Typography variant="h3" className="text-center">
-              Please give permission to access the camera and refresh the page
-            </Typography>
+      <div className="flex flex-1 flex-col">
+        {!processing && (
+          <div className="flex-1">
+            <QrScannerPlugin qrCodeSuccessCallback={onScanResult} onPermRefused={onPermRefused} />
           </div>
-        </div>
-      )}
-      {fileUploadVisible && (
-        <div className="mt-6">
-          <FileUploadScanner onFileUpload={onFileUpload} />
-        </div>
-      )}
+        )}
+        {processing && <LoadingBanner text="Loading.." />}
+        {!processing && !hasPermission && (
+          <div className="mx-4 mt-2 rounded-xl bg-gray-100 dark:bg-gray-800">
+            <div className="flex flex-col items-center justify-center gap-2 px-6 pb-12 pt-10">
+              <VideoCameraSlashIcon className="w-20 text-gray-500" />
+              <Typography variant="h3" className="text-center">
+                Please give permission to access the camera and refresh the page
+              </Typography>
+            </div>
+          </div>
+        )}
+        {fileUploadVisible && (
+          <div className="my-6">
+            <FileUploadScanner onFileUpload={onFileUpload} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

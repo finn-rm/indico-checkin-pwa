@@ -185,7 +185,7 @@ export default function App() {
   }, [logError]);
 
   return (
-    <div className="h-full min-h-screen w-screen overflow-auto bg-gray-50 pb-32 dark:bg-gray-900">
+    <div className="h-full min-h-screen w-screen overflow-auto bg-gray-50 dark:bg-gray-900">
       <RouterProvider router={router} />
       <Modal />
     </div>

@@ -3,9 +3,24 @@
   display: none !important;
 }
 
+.container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
 .wrapper {
   position: relative;
   overflow: hidden;
+  max-height: 70vh; /* Limit height to 70% of viewport height */
+}
+
+/* Add this to constrain the video element */
+.wrapper :global(video) {
+  max-height: 70vh;
+  width: 100%;
+  object-fit: cover;
 }
 
 .shaded-region {
