@@ -25,7 +25,7 @@ export default function CheckinConfirmation() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/selfscan', {replace: true});
+      navigate('selfscan', {replace: true});
     }, 2000);
 
     return () => clearTimeout(timer);

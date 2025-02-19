@@ -1,6 +1,6 @@
 import {isRecord} from '../../utils/typeguards';
 
-export const redirectUri = `${window.location.origin}/auth/redirect`;
+export const redirectUri = `${window.location.origin}${window.location.pathname}#/auth/redirect`;
 export const discoveryEndpoint = '.well-known/oauth-authorization-server';
 
 interface QRCodeServerData {

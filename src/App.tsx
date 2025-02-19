@@ -1,7 +1,7 @@
 import './App.css';
 import {useEffect, lazy, Suspense} from 'react';
 import {
-  createBrowserRouter,
+  createHashRouter,
   RouterProvider,
   Params,
   Outlet,
@@ -71,14 +71,14 @@ function RootPage() {
   );
 }
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   {
     path: '/',
     element: <RootPage />,
     errorElement: <NotFoundPage />,
     children: [
       {
-        path: '/',
+        path: '',
         element: <Homepage />,
         loader: async () => {
           const servers = await getServers();
@@ -88,7 +88,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: '/event/:eventId',
+        path: 'event/:eventId',
         element: <EventPage />,
         loader: async ({params}) => {
           const {eventId} = getNumericParams(params);
@@ -98,7 +98,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: '/event/:id/:regformId',
+        path: 'event/:id/:regformId',
         element: <RegformPage />,
         loader: async ({params}) => {
           const {id: eventId, regformId} = getNumericParams(params);
@@ -109,7 +109,7 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: '/event/:id/:regformId/:participantId',
+        path: 'event/:id/:regformId/:participantId',
         element: <ParticipantPage />,
         loader: async ({params}) => {
           const {id: eventId, regformId, participantId} = getNumericParams(params);
@@ -120,11 +120,11 @@ const router = createBrowserRouter([
         },
       },
       {
-        path: '/settings',
+        path: 'settings',
         element: <SettingsPage />,
       },
       {
-        path: '/scan',
+        path: 'scan',
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <ScanPage />
@@ -132,7 +132,7 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: '/selfscan',
+        path: 'selfscan',
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <SelfScan />
@@ -140,11 +140,11 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: '/auth/redirect',
+        path: 'auth/redirect',
         element: <AuthRedirectPage />,
       },
       {
-        path: '/checkin-confirmation/:eventId/:regformId/:participantId',
+        path: 'checkin-confirmation/:eventId/:regformId/:participantId',
         element: <CheckinConfirmation />,
         loader: async ({params}) => {
           const {eventId, regformId, participantId} = getNumericParams(params);
